@@ -1,0 +1,11 @@
+{
+  "model": "piper-lessac-medium",
+  "n_samples": 10,
+  "total_audio_s": 42.1,
+  "total_inference_s": 3.9,
+  "rtfx": 10.79,
+  "mean_ttfa_s": 0.043,
+  "median_ttfa_s": 0.042,
+  "wer": 0.11,
+  "utmos": 3.7
+}
