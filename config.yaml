@@ -1,0 +1,17 @@
+# Open TTS eval harness config
+# Swap model section for different adapters / checkpoints.
+
+model:
+  adapter: "piper"                    # "piper" or "hf"
+  model_path: "voices/en_US-lessac-medium.onnx"
+  # config_path: null                 # optional explicit Piper config
+  name: "piper-lessac-medium"
+
+  # Example HF alternative:
+  # adapter: "hf"
+  # id: "facebook/mms-tts-eng"
+  # name: "mms-tts-eng"
+
+dataset: "datasets/sample_ljspeech.jsonl"
+metrics: [wer, rtfx, ttfa, utmos]     # drop "utmos" if torch.hub unavailable
+output: "results.json"

@@ -1,0 +1,10 @@
+{"text": "The quick brown fox jumps over the lazy dog.", "reference": "the quick brown fox jumps over the lazy dog"}
+{"text": "Speech synthesis systems are evaluated on intelligibility.", "reference": "speech synthesis systems are evaluated on intelligibility"}
+{"text": "Word error rate measures transcription accuracy.", "reference": "word error rate measures transcription accuracy"}
+{"text": "Real time factor indicates generation speed.", "reference": "real time factor indicates generation speed"}
+{"text": "Time to first audio is critical for interactive applications.", "reference": "time to first audio is critical for interactive applications"}
+{"text": "Naturalness is often predicted by models such as UTMOS.", "reference": "naturalness is often predicted by models such as utmos"}
+{"text": "Small models can run efficiently on CPU and edge devices.", "reference": "small models can run efficiently on cpu and edge devices"}
+{"text": "Open evaluation enables reproducible comparisons across systems.", "reference": "open evaluation enables reproducible comparisons across systems"}
+{"text": "Piper is a fast VITS based text to speech system.", "reference": "piper is a fast vits based text to speech system"}
+{"text": "Honest metrics prevent overclaiming on leaderboards.", "reference": "honest metrics prevent overclaiming on leaderboards"}
