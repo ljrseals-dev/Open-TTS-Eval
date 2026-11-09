@@ -5,7 +5,8 @@ from __future__ import annotations
 import numpy as np
 from adapters.base import SynthResult
 
-# RMS threshold below which audio is treated as silence (no hallucination credit)
+# -80 dBFS in float32 [-1, 1]; near noise floor. Raise to 1e-3 if adapters
+# output quiet-but-broken audio that would otherwise reach Whisper.
 _SILENCE_RMS = 1e-4
 
 
