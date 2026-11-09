@@ -12,6 +12,7 @@ import numpy as np
 from adapters.base import SynthResult
 
 _UTMOS = None
+_UTMOS_TAG = "tarepan/SpeechMOS:v1.2.0"
 
 
 def _load():
@@ -20,7 +21,7 @@ def _load():
         try:
             import torch
             _UTMOS = torch.hub.load(
-                "tarepan/SpeechMOS:v1.2.0",
+                _UTMOS_TAG,
                 "utmos22_strong",
                 trust_repo=True,
             )
@@ -35,8 +36,12 @@ def _load():
 def compute_utmos(
     results: list[SynthResult],
     target_sr: int = 16000,
-) -> float:
-    """Return mean UTMOS over pre-synthesized samples."""
+    return_per_sample: bool = False,
+) -> float | tuple[float, list[float]]:
+    """
+    Return mean UTMOS over pre-synthesized samples.
+    If return_per_sample=True, also returns the list of per-utterance scores.
+    """
     import librosa
     import torch
 
@@ -45,6 +50,7 @@ def compute_utmos(
 
     for res in results:
         if res.audio.size == 0:
+            scores.append(float("nan"))
             continue
         audio = np.ascontiguousarray(res.audio.astype(np.float32))
         if res.sample_rate != target_sr:
@@ -55,9 +61,16 @@ def compute_utmos(
         t = torch.from_numpy(audio).unsqueeze(0)
         with torch.no_grad():
             mos = model(t, target_sr).item()
-        if np.isfinite(mos):
-            scores.append(mos)
+        scores.append(float(mos) if np.isfinite(mos) else float("nan"))
 
-    if not scores:
-        return float("nan")
-    return float(np.mean(scores))
+    finite = [s for s in scores if np.isfinite(s)]
+    mean = float(np.mean(finite)) if finite else float("nan")
+
+    if return_per_sample:
+        return mean, scores
+    return mean
+
+
+def utmos_tag() -> str:
+    """Return the pinned torch.hub tag for reproducibility records."""
+    return _UTMOS_TAG

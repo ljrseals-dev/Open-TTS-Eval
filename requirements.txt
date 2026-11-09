@@ -1,20 +1,17 @@
 # Core
-numpy
-scipy
-pyyaml
-librosa
+numpy>=1.24
+scipy>=1.10
+pyyaml>=6.0
+librosa>=0.10
 
 # ASR + WER
-openai-whisper
-jiwer
+openai-whisper>=20231117
+jiwer>=3.0
 
 # Piper (CPU ONNX TTS)
-piper-tts
+piper-tts>=1.2.0
 
-# Optional: HuggingFace pipeline adapter
-transformers
-torch
-torchaudio
-
-# UTMOS (predicted naturalness) – requires torch + torch.hub
-# torch already listed above
+# Optional: HuggingFace pipeline adapter + UTMOS
+transformers>=4.40
+torch>=2.1
+torchaudio>=2.1

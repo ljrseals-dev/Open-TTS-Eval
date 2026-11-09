@@ -1,7 +1,9 @@
 # Open TTS Eval Harness
 
-Honest, model-agnostic evaluation harness for the metrics used by the
-[Hugging Face Open TTS Leaderboard](https://huggingface.co/spaces/hf-audio/open_tts_leaderboard):
+Honest, model-agnostic evaluation harness covering a practical subset of the
+metrics used by the
+[Hugging Face Open TTS Leaderboard](https://huggingface.co/spaces/hf-audio/open_tts_leaderboard)
+(WER, RTFx, TTFA, UTMOS). Speaker similarity (SECS) is not yet implemented.
 
 | Metric | Meaning | Direction |
 |--------|---------|-----------|
@@ -18,6 +20,9 @@ Honest, model-agnostic evaluation harness for the metrics used by the
 4. **Reproducible** – fixed dataset format, pinned metric models, JSON + Markdown reports.
 5. **Single synthesis pass** – audio is generated once and cached; WER/UTMOS reuse the cached `SynthResult` objects (no triple inference).
 6. **Metrics are gated** – only metrics listed in `config.yaml` are computed and reported.
+7. **Silence-aware WER** – near-silent audio is treated as empty hypothesis (no Whisper hallucination credit).
+8. **Per-sample sidecar** – `samples.jsonl` records per-utterance WER / UTMOS for diagnosis.
+9. **`--dry-run`** – synthesizes only the first two samples for a fast smoke test.
 
 ## Quick start
 
