@@ -13,5 +13,6 @@ model:
   # name: "mms-tts-eng"
 
 dataset: "datasets/sample_ljspeech.jsonl"
-metrics: [wer, rtfx, ttfa, utmos]     # drop "utmos" if torch.hub unavailable
+metrics: [wer, rtfx, ttfa, utmos]     # drop any metric you don't want
+asr_model: "base"                     # Whisper size for WER (tiny/base/small/...)
 output: "results.json"

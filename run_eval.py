@@ -6,17 +6,25 @@ Usage:
   python run_eval.py [--config config.yaml]
 
 Produces results.json with WER, RTFx, TTFA, UTMOS (as configured).
+
+Design notes
+------------
+- Synthesis is performed exactly once per sample.
+- Cached SynthResult objects are passed to metric functions that need audio.
+- TTFA / RTFx are only reported when requested in config["metrics"].
+- No fake scores: UTMOS raises if the predictor cannot be loaded.
 """
 
 from __future__ import annotations
 
 import argparse
 import json
-import time
 from pathlib import Path
 
 import numpy as np
 import yaml
+
+from adapters.base import SynthResult
 
 
 def load_samples(path: str | Path) -> list[dict]:
@@ -54,48 +62,60 @@ def get_adapter(config: dict):
 def evaluate(config: dict) -> dict:
     from metrics.wer import compute_wer
     from metrics.utmos import compute_utmos
+    from metrics.rtfx import rtfx as compute_rtfx
 
     samples = load_samples(config["dataset"])
     if not samples:
         raise ValueError(f"No samples found in {config['dataset']}")
 
     adapter = get_adapter(config)
+    metrics = set(config.get("metrics", ["wer", "rtfx", "ttfa"]))
     print(f"Evaluating {adapter.name} on {len(samples)} samples...")
+    print(f"Requested metrics: {sorted(metrics)}")
 
-    durations = []
-    synth_times = []
-    ttfas = []
-
+    # ---- single synthesis pass ------------------------------------------------
+    results_list: list[SynthResult] = []
     for i, s in enumerate(samples):
         res = adapter.synthesize(s["text"])
-        dur = len(res.audio) / res.sample_rate if res.sample_rate > 0 else 0.0
-        durations.append(dur)
-        synth_times.append(res.total_seconds)
-        ttfas.append(res.ttfa_seconds)
+        results_list.append(res)
         if (i + 1) % 5 == 0 or (i + 1) == len(samples):
             print(f"  synthesized {i + 1}/{len(samples)}")
 
+    durations = [
+        len(r.audio) / r.sample_rate if r.sample_rate > 0 else 0.0
+        for r in results_list
+    ]
+    synth_times = [r.total_seconds for r in results_list]
+    ttfas = [r.ttfa_seconds for r in results_list]
+
     total_audio = float(sum(durations))
     total_synth = float(sum(synth_times))
-    metrics = set(config.get("metrics", ["wer", "rtfx", "ttfa"]))
 
-    results = {
+    results: dict = {
         "model": adapter.name,
         "n_samples": len(samples),
         "total_audio_s": round(total_audio, 3),
         "total_inference_s": round(total_synth, 3),
-        "rtfx": round(total_audio / total_synth, 4) if total_synth > 0 else 0.0,
-        "mean_ttfa_s": round(float(np.mean(ttfas)), 4),
-        "median_ttfa_s": round(float(np.median(ttfas)), 4),
     }
 
+    if "rtfx" in metrics:
+        results["rtfx"] = round(compute_rtfx(total_audio, total_synth), 4)
+
+    if "ttfa" in metrics:
+        results["mean_ttfa_s"] = round(float(np.mean(ttfas)), 4)
+        results["median_ttfa_s"] = round(float(np.median(ttfas)), 4)
+
     if "wer" in metrics:
-        print("Computing WER (this re-synthesizes + runs ASR)...")
-        results["wer"] = round(compute_wer(adapter, samples), 4)
+        asr_size = config.get("asr_model", "base")
+        print(f"Computing WER (ASR={asr_size}, using cached audio)...")
+        results["wer"] = round(
+            compute_wer(samples, results_list, asr_model_size=asr_size), 4
+        )
+        results["asr_model"] = f"whisper-{asr_size}"
 
     if "utmos" in metrics:
-        print("Computing UTMOS...")
-        results["utmos"] = round(compute_utmos(adapter, samples), 4)
+        print("Computing UTMOS (using cached audio)...")
+        results["utmos"] = round(compute_utmos(results_list), 4)
 
     return results
 

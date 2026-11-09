@@ -16,6 +16,8 @@ Honest, model-agnostic evaluation harness for the metrics used by the
 2. **Honest timings** – TTFA uses the actual first chunk when the backend supports streaming.
 3. **No fake scores** – UTMOS raises if the predictor is unavailable; WER uses a real ASR (Whisper).
 4. **Reproducible** – fixed dataset format, pinned metric models, JSON + Markdown reports.
+5. **Single synthesis pass** – audio is generated once and cached; WER/UTMOS reuse the cached `SynthResult` objects (no triple inference).
+6. **Metrics are gated** – only metrics listed in `config.yaml` are computed and reported.
 
 ## Quick start
 

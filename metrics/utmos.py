@@ -3,9 +3,13 @@ Predicted naturalness (UTMOS).
 
 Uses the UTMOS22 predictor via torch.hub (SpeechMOS).
 Raises a clear error if the predictor is unavailable — never invents scores.
+Accepts a list of pre-computed SynthResult objects (no re-synthesis).
 """
 
+from __future__ import annotations
+
 import numpy as np
+from adapters.base import SynthResult
 
 _UTMOS = None
 
@@ -28,26 +32,32 @@ def _load():
     return _UTMOS
 
 
-def compute_utmos(adapter, samples, target_sr: int = 16000):
-    """Return mean UTMOS over synthesized samples."""
+def compute_utmos(
+    results: list[SynthResult],
+    target_sr: int = 16000,
+) -> float:
+    """Return mean UTMOS over pre-synthesized samples."""
     import librosa
     import torch
 
     model = _load()
     scores = []
 
-    for s in samples:
-        res = adapter.synthesize(s["text"])
+    for res in results:
         if res.audio.size == 0:
             continue
-        audio = res.audio.astype(np.float32)
+        audio = np.ascontiguousarray(res.audio.astype(np.float32))
         if res.sample_rate != target_sr:
             audio = librosa.resample(
                 audio, orig_sr=res.sample_rate, target_sr=target_sr
             )
+            audio = np.ascontiguousarray(audio)
         t = torch.from_numpy(audio).unsqueeze(0)
         with torch.no_grad():
             mos = model(t, target_sr).item()
-        scores.append(mos)
+        if np.isfinite(mos):
+            scores.append(mos)
 
-    return float(np.mean(scores)) if scores else float("nan")
+    if not scores:
+        return float("nan")
+    return float(np.mean(scores))
